@@ -1,0 +1,56 @@
+import hashlib
+import time
+
+class Block:
+    def __init__(self, index, timestamp, data, previous_hash):
+        self.index = index
+        self.timestamp = timestamp
+        self.data = data  # For course registration, e.g., {'student_id':..., 'course_id':...}
+        self.previous_hash = previous_hash
+        self.hash = self.calculate_hash()
+
+    def calculate_hash(self):
+        block_string = f"{self.index}{self.timestamp}{self.data}{self.previous_hash}"
+        return hashlib.sha256(block_string.encode()).hexdigest()
+
+class Blockchain:
+    def __init__(self):
+        self.chain = [self.create_genesis_block()]
+
+    def create_genesis_block(self):
+        # First block of the chain
+        return Block(0, time.time(), "Genesis Block", "0")
+
+    def get_latest_block(self):
+        return self.chain[-1]
+
+    def add_block(self, data):
+        previous_block = self.get_latest_block()
+        new_block = Block(len(self.chain), time.time(), data, previous_block.hash)
+        self.chain.append(new_block)
+
+    def is_chain_valid(self):
+        # Verify the blockchain integrity
+        for i in range(1, len(self.chain)):
+            current = self.chain[i]
+            prev = self.chain[i - 1]
+            if current.hash != current.calculate_hash():
+                return False
+            if current.previous_hash != prev.hash:
+                return False
+        return True
+
+# Sample usage
+blockchain = Blockchain()
+
+# Register students for courses
+blockchain.add_block({'student_id': '123', 'course_id': 'CSE101'})
+blockchain.add_block({'student_id': '456', 'course_id': 'MAT202'})
+blockchain.add_block({'student_id': '789', 'course_id': 'PHY303'})
+
+# Print the blockchain
+for block in blockchain.chain:
+    print(f"Block {block.index}: {block.data}, Hash: {block.hash}")
+
+# Check if blockchain is valid
+print("Is blockchain valid?", blockchain.is_chain_valid())
